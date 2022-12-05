@@ -6,6 +6,7 @@ import { ref, watch } from "vue";
 const searchTerm = ref("");
 const timeoutId = ref(null);
 const resultList = ref([]);
+const isLoading = ref(false);
 
 const findProducts = async (term) => {
   if (term.trim().length === 0) {
@@ -13,18 +14,21 @@ const findProducts = async (term) => {
     return;
   }
 
-  axios
-    .get(`https://dummyjson.com/products/search?q=${term}&limit=10`)
-    .then((res) => {
-      timeoutId.value = setTimeout(() => {
-        console.log(term);
+  isLoading.value = true;
+
+  clearTimeout(timeoutId.value);
+
+  timeoutId.value = setTimeout(() => {
+    axios
+      .get(`https://dummyjson.com/products/search?q=${term}&limit=10`)
+      .then((res) => {
         resultList.value = res.data.products;
-        timeoutId.value = null;
-      }, 300);
-    })
-    .catch(() => {
-      alert("Something went wrong!");
-    });
+        isLoading.value = false;
+      })
+      .catch(() => {
+        alert("Something went wrong!");
+      });
+  }, 300);
 };
 
 watch(searchTerm, (newTerm) => findProducts(newTerm));
@@ -39,7 +43,7 @@ watch(searchTerm, (newTerm) => findProducts(newTerm));
       v-model="searchTerm"
       placeholder="Start typing..."
     />
-    <loading-spinner v-if="timeoutId" />
+    <loading-spinner v-if="isLoading" />
     <template v-else>
       <ul>
         <li
